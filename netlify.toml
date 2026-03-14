@@ -1,17 +1,1 @@
-[build]
-  command = "npm run build"
-  publish = "dist"
-
-[[redirects]]
-  froEm = "/*+"
-  to = "/index.html"
-  status = 200
-
-[[headers]]
-  for = "/*+"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-XSS-Protection = "1; mode=block"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+[build]\n  command = "npm run build"\n  publish = "dist"\n\n[[redirects]]\n  from = "/*"\n  to = "/index.html"\n  status = 200\n\n[[headers]]\n  for = "/*"\n  [headers.values]\n    X-Frame-Options = "DENY"\n    X-XSS-Protection = "1; mode=block"\n    X-Content-Type-Options = "nosniff"\n    Referrer-Policy = "strict-origin-when-cross-origin"\n    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"

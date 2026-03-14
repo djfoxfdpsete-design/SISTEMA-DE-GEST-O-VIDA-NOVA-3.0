@@ -17,6 +17,8 @@ interface MembersProps {
 export const Members: React.FC<MembersProps> = ({ members, onSave, onImport, onDelete, onBulkDelete }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
@@ -52,11 +54,19 @@ export const Members: React.FC<MembersProps> = ({ members, onSave, onImport, onD
     setSelectedIds(next);
   };
 
-  const handleBulkDeleteAction = () => {
-    if (selectedIds.size === 0) return;
-    if (confirm(`Deseja realmente excluir ${selectedIds.size} associados selecionados? Esta ação é irreversível.`)) {
-      onBulkDelete?.(Array.from(selectedIds));
-      setSelectedIds(new Set());
+  const handleBulkDeleteAction = async () => {
+    if (selectedIds.size === 0 || !onBulkDelete) return;
+    
+    setIsDeleting(true);
+    try {
+        await onBulkDelete(Array.from(selectedIds));
+        setSelectedIds(new Set());
+        setIsConfirmDeleteOpen(false);
+        alert(`${selectedIds.size} associados excluídos com sucesso.`);
+    } catch (err) {
+        alert("Erro ao excluir associados. Tente novamente.");
+    } finally {
+        setIsDeleting(false);
     }
   };
 
@@ -246,10 +256,12 @@ export const Members: React.FC<MembersProps> = ({ members, onSave, onImport, onD
           
           {selectedIds.size > 0 && (
             <button 
-                onClick={handleBulkDeleteAction}
+                onClick={() => setIsConfirmDeleteOpen(true)}
+                disabled={isDeleting}
                 className="flex items-center justify-center gap-2 px-6 py-2 bg-red-500/10 text-red-500 border border-red-500/20 font-bold rounded-xl hover:bg-red-500 hover:text-white transition-all text-xs uppercase tracking-widest animate-in slide-in-from-right-4"
             >
-                <Trash2 size={16} /> Excluir Selecionados ({selectedIds.size})
+                {isDeleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />} 
+                Excluir Selecionados ({selectedIds.size})
             </button>
           )}
 
@@ -386,6 +398,37 @@ export const Members: React.FC<MembersProps> = ({ members, onSave, onImport, onD
                     {(!editingMember.documents || editingMember.documents.length === 0) && (
                         <div className="py-12 text-center opacity-30 italic text-sm">Nenhum documento arquivado.</div>
                     )}
+                </div>
+            </div>
+          </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão em Massa */}
+      {isConfirmDeleteOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-xl animate-in fade-in duration-300">
+            <div className="glass-panel w-full max-w-sm rounded-3xl p-8 shadow-2xl border border-red-500/20 text-center animate-in zoom-in duration-300">
+                <div className="w-20 h-20 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <AlertCircle size={40} />
+                </div>
+                <h2 className="text-xl font-black text-white uppercase tracking-tighter mb-2">Confirmar Exclusão</h2>
+                <p className="text-slate-400 text-sm mb-8">
+                    Você está prestes a excluir permanentemente <span className="text-red-500 font-bold">{selectedIds.size}</span> associados. Esta ação não pode ser desfeita.
+                </p>
+                <div className="flex gap-3">
+                    <button 
+                        disabled={isDeleting}
+                        onClick={() => setIsConfirmDeleteOpen(false)} 
+                        className="flex-1 py-4 bg-slate-800 text-slate-400 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-700 transition-all"
+                    >
+                        Cancelar
+                    </button>
+                    <button 
+                        disabled={isDeleting}
+                        onClick={handleBulkDeleteAction}
+                        className="flex-1 py-4 bg-red-500 text-white font-black rounded-2xl uppercase text-[10px] tracking-widest hover:brightness-110 transition-all shadow-xl shadow-red-500/20"
+                    >
+                        {isDeleting ? 'Excluindo...' : 'Sim, Excluir'}
+                    </button>
                 </div>
             </div>
           </div>

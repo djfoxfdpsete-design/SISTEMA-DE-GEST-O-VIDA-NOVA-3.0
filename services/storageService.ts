@@ -81,6 +81,11 @@ export const StorageService = {
     saveLocal(STORAGE_KEYS.members, local.filter(m => m.id !== id));
     try { await supabase.from('members').delete().eq('id', id); } catch (e) {}
   },
+  deleteMembers: async (ids: string[]) => {
+    const local = getLocal<Member>(STORAGE_KEYS.members);
+    saveLocal(STORAGE_KEYS.members, local.filter(m => !ids.includes(m.id)));
+    try { await supabase.from('members').delete().in('id', ids); } catch (e) {}
+  },
   importData: async (members: Member[]) => {
     const local = getLocal<Member>(STORAGE_KEYS.members);
     const combined = [...local, ...members];

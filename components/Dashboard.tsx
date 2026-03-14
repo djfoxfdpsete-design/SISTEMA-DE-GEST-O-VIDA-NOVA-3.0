@@ -34,29 +34,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ members, payments, transac
 
     const activeMembers = members.filter(m => m.status === MemberStatus.ACTIVE);
     
-    const allReceivedThisMonth = payments.filter(p => {
-        const payDate = new Date(p.date);
-        return payDate.getMonth() === currentMonth && payDate.getFullYear() === currentYear;
-    });
+    const currentMonthPayments = payments.filter(p => p.month === currentMonth && p.year === currentYear);
 
-    const currentMonthRefRevenue = allReceivedThisMonth
-        .filter(p => p.month === currentMonth && p.year === currentYear)
+    const currentMonthRefRevenue = currentMonthPayments
+        .filter(p => {
+            const payDate = new Date(p.date);
+            return payDate.getFullYear() === currentYear && payDate.getMonth() === currentMonth;
+        })
         .reduce((acc, curr) => acc + curr.amount, 0);
 
-    const recoveredArrearsRevenue = allReceivedThisMonth
-        .filter(p => p.year < currentYear || (p.year === currentYear && p.month < currentMonth))
+    const recoveredArrearsRevenue = currentMonthPayments
+        .filter(p => {
+             const payDate = new Date(p.date);
+             return payDate.getFullYear() > currentYear || (payDate.getFullYear() === currentYear && payDate.getMonth() > currentMonth);
+        })
         .reduce((acc, curr) => acc + curr.amount, 0);
 
-    const earlyPaymentsRevenue = payments
-        .filter(p => p.month === currentMonth && p.year === currentYear)
+    const earlyPaymentsRevenue = currentMonthPayments
         .filter(p => {
              const payDate = new Date(p.date);
              return payDate.getFullYear() < currentYear || (payDate.getFullYear() === currentYear && payDate.getMonth() < currentMonth);
         })
-        .reduce((acc, curr) => acc + curr.amount, 0);
-
-    const futurePaymentsReceived = allReceivedThisMonth
-        .filter(p => p.year > currentYear || (p.year === currentYear && p.month > currentMonth))
         .reduce((acc, curr) => acc + curr.amount, 0);
 
     const negotiationRevenue = negotiations.reduce((acc, neg) => {
@@ -84,11 +82,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ members, payments, transac
       })
       .reduce((acc, curr) => acc + curr.amount, 0);
 
-    const totalRevenue = currentMonthRefRevenue + recoveredArrearsRevenue + futurePaymentsReceived + negotiationRevenue + extraRevenue;
+    const totalRevenue = currentMonthRefRevenue + recoveredArrearsRevenue + earlyPaymentsRevenue + negotiationRevenue + extraRevenue;
     const balance = totalRevenue - expenses;
 
-    const currentMonthPaidCount = payments.filter(p => p.month === currentMonth && p.year === currentYear).length;
-    const delinquencyRate = activeMembers.length > 0 ? ((activeMembers.length - currentMonthPaidCount) / activeMembers.length) * 100 : 0;
+    const delinquencyRate = activeMembers.length > 0 ? ((activeMembers.length - currentMonthPayments.length) / activeMembers.length) * 100 : 0;
 
     return {
       totalRevenue,
@@ -99,7 +96,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ members, payments, transac
       expenses,
       balance,
       delinquencyRate,
-      methodStats: allReceivedThisMonth.reduce((acc: any, curr) => {
+      methodStats: currentMonthPayments.reduce((acc: any, curr) => {
         acc[curr.method] = (acc[curr.method] || 0) + curr.amount;
         return acc;
       }, {})

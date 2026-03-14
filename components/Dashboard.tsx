@@ -13,6 +13,8 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ members, payments, transactions, negotiations }) => {
   const [showBackupAlert, setShowBackupAlert] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
     const lastBackup = StorageService.getLastBackupDate();
@@ -27,9 +29,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ members, payments, transac
   }, []);
   
   const stats = useMemo(() => {
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth();
+    const currentYear = selectedYear;
+    const currentMonth = selectedMonth;
 
     const activeMembers = members.filter(m => m.status === MemberStatus.ACTIVE);
     
@@ -90,7 +91,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ members, payments, transac
         return acc;
       }, {})
     };
-  }, [members, payments, transactions, negotiations]);
+  }, [members, payments, transactions, negotiations, selectedMonth, selectedYear]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -106,6 +107,33 @@ export const Dashboard: React.FC<DashboardProps> = ({ members, payments, transac
               </div>
           </div>
       )}
+
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-2 bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
+          <h2 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
+            <Activity size={16} className="text-neon-blue"/> Resumo do Período
+          </h2>
+          <div className="flex gap-3 w-full sm:w-auto">
+              <select 
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                  className="flex-1 sm:flex-none bg-slate-950 border border-slate-700 text-white rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest focus:border-neon-blue focus:outline-none transition-all cursor-pointer"
+              >
+                  {Array.from({length: 12}).map((_, i) => (
+                      <option key={i} value={i}>{new Date(2000, i, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
+                  ))}
+              </select>
+              <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="flex-1 sm:flex-none bg-slate-950 border border-slate-700 text-slate-300 rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest focus:border-neon-blue focus:outline-none transition-all cursor-pointer"
+              >
+                  {Array.from({length: 10}).map((_, i) => {
+                      const year = new Date().getFullYear() - 5 + i;
+                      return <option key={year} value={year}>{year}</option>;
+                  })}
+              </select>
+          </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="glass-panel p-6 rounded-2xl border-l-4 border-emerald-500 shadow-xl transition-all hover:scale-[1.02]">

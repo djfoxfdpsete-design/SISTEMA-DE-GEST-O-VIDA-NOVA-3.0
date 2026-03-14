@@ -47,6 +47,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ members, payments, transac
         .filter(p => p.year < currentYear || (p.year === currentYear && p.month < currentMonth))
         .reduce((acc, curr) => acc + curr.amount, 0);
 
+    const earlyPaymentsRevenue = allReceivedThisMonth
+        .filter(p => p.year > currentYear || (p.year === currentYear && p.month > currentMonth))
+        .reduce((acc, curr) => acc + curr.amount, 0);
+
     const negotiationRevenue = negotiations.reduce((acc, neg) => {
         const paidThisMonth = neg.installments
             .filter(inst => {
@@ -72,7 +76,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ members, payments, transac
       })
       .reduce((acc, curr) => acc + curr.amount, 0);
 
-    const totalRevenue = currentMonthRefRevenue + recoveredArrearsRevenue + negotiationRevenue + extraRevenue;
+    const totalRevenue = currentMonthRefRevenue + recoveredArrearsRevenue + earlyPaymentsRevenue + negotiationRevenue + extraRevenue;
     const balance = totalRevenue - expenses;
 
     const currentMonthPaidCount = payments.filter(p => p.month === currentMonth && p.year === currentYear).length;
@@ -82,6 +86,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ members, payments, transac
       totalRevenue,
       currentMonthRefRevenue,
       recoveredArrearsRevenue,
+      earlyPaymentsRevenue,
       negotiationRevenue,
       expenses,
       balance,
@@ -135,7 +140,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ members, payments, transac
           </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <div className="glass-panel p-6 rounded-2xl border-l-4 border-emerald-500 shadow-xl transition-all hover:scale-[1.02]">
             <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Entrada Total</p>
             <h3 className="text-2xl font-black text-white">R$ {stats.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
@@ -149,6 +154,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ members, payments, transac
         <div className="glass-panel p-6 rounded-2xl border-l-4 border-amber-500 shadow-xl transition-all hover:scale-[1.02]">
             <p className="text-amber-500 text-[10px] font-black uppercase tracking-widest mb-1">Atrasados <History size={10}/></p>
             <h3 className="text-2xl font-black text-amber-500">R$ {stats.recoveredArrearsRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
+        </div>
+
+        <div className="glass-panel p-6 rounded-2xl border-l-4 border-cyan-400 shadow-xl transition-all hover:scale-[1.02]">
+            <p className="text-cyan-400 text-[10px] font-black uppercase tracking-widest mb-1">Pag Antecip. <Clock size={10}/></p>
+            <h3 className="text-2xl font-black text-cyan-400">R$ {stats.earlyPaymentsRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
         </div>
 
         <div className="glass-panel p-6 rounded-2xl border-l-4 border-pink-500 shadow-xl transition-all hover:scale-[1.02]">

@@ -11,7 +11,6 @@ interface SystemToolsProps {
 
 export const SystemTools: React.FC<SystemToolsProps> = ({ onRestore, user }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [isResetting, setIsResetting] = useState(false);
 
     const isFoxAdm = user?.role === 'FOX_ADM';
 
@@ -25,30 +24,6 @@ export const SystemTools: React.FC<SystemToolsProps> = ({ onRestore, user }) => 
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-    };
-
-    const handleMasterReset = async () => {
-        if (!isFoxAdm) {
-            alert("Acesso Negado: Somente o Fox ADM pode resetar o sistema.");
-            return;
-        }
-
-        const confirm1 = confirm("⚠️ ATENÇÃO: Você está prestes a apagar TODOS os dados do sistema (Associados, Pagamentos, Acordos e Caixa).\n\nEsta ação é IRREVERSÍVEL. Deseja continuar?");
-        if (!confirm1) return;
-
-        const confirm2 = confirm("CONFIRMAÇÃO FINAL: Deseja realmente zerar o sistema para novos cadastros?");
-        if (!confirm2) return;
-
-        setIsResetting(true);
-        try {
-            await StorageService.logAction('DELETE', 'SYSTEM', 'RESET TOTAL DO SISTEMA EXECUTADO', user?.username || 'FOX_ADM');
-            await StorageService.wipeAllData();
-            alert("Sistema zerado com sucesso! A página será reiniciada.");
-            window.location.reload();
-        } catch (e) {
-            alert("Erro ao zerar sistema.");
-            setIsResetting(false);
-        }
     };
 
     const handleRestoreClick = () => {
@@ -87,7 +62,7 @@ export const SystemTools: React.FC<SystemToolsProps> = ({ onRestore, user }) => 
                 )}
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Backup Section */}
                 <div className="glass-panel p-6 rounded-2xl border border-slate-700">
                     <div className="flex items-center gap-3 mb-4">
@@ -114,44 +89,39 @@ export const SystemTools: React.FC<SystemToolsProps> = ({ onRestore, user }) => 
                 <div className="glass-panel p-6 rounded-2xl border border-slate-700">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="p-3 bg-green-500/20 text-green-400 rounded-lg">
-                            <Smartphone size={24} />
+                            <Wifi size={24} />
                         </div>
-                        <h3 className="text-lg font-bold text-white">Versão App</h3>
+                        <h3 className="text-lg font-bold text-white">Status de Sincronia</h3>
                     </div>
-                    <p className="text-xs text-slate-400 mb-6 font-bold uppercase tracking-widest leading-relaxed">
-                        Instale o Vida Nova na sua tela inicial.
-                    </p>
-                    <ul className="space-y-3 text-[10px] text-slate-400 font-black uppercase tracking-widest">
-                        <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/> Modo Offline</li>
-                        <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/> Ícone na Tela Inicial</li>
-                        <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/> Interface Imersiva</li>
-                    </ul>
-                </div>
-
-                {/* Danger Zone Section */}
-                <div className="glass-panel p-6 rounded-2xl border border-red-500/30 bg-red-500/5">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="p-3 bg-red-500/20 text-red-500 rounded-lg">
-                            <AlertTriangle size={24} />
+                    <div className="space-y-4">
+                        <div className="flex items-start gap-3">
+                            <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center mt-1">
+                                <Check size={12} className="text-green-500"/>
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-white uppercase tracking-widest">Supabase (Dados)</p>
+                                <p className="text-[9px] text-slate-500 font-bold uppercase">Automático e em tempo real</p>
+                            </div>
                         </div>
-                        <h3 className="text-lg font-bold text-white">Zona de Perigo</h3>
+                        <div className="flex items-start gap-3">
+                            <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center mt-1">
+                                <List size={12} className="text-blue-500"/>
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-white uppercase tracking-widest">GitHub (Código)</p>
+                                <p className="text-[9px] text-slate-500 font-bold uppercase">Rode o script SUPER_SYNC.ps1</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <div className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center mt-1">
+                                <Wifi size={12} className="text-purple-500"/>
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-white uppercase tracking-widest">Netlify (Site Online)</p>
+                                <p className="text-[9px] text-slate-500 font-bold uppercase">Atualiza 1 min após o GitHub</p>
+                            </div>
+                        </div>
                     </div>
-                    <p className="text-xs text-red-400 mb-6 font-bold uppercase tracking-widest leading-relaxed">
-                        Cuidado: Ações irreversíveis que afetam todo o sistema.
-                    </p>
-                    {isFoxAdm ? (
-                        <button 
-                            disabled={isResetting}
-                            onClick={handleMasterReset}
-                            className="w-full py-4 bg-red-600 hover:bg-red-500 text-white rounded-xl flex items-center justify-center gap-2 transition-all font-black uppercase text-[10px] tracking-widest shadow-xl shadow-red-500/20"
-                        >
-                            <Trash2 size={18}/> {isResetting ? 'Reiniciando...' : 'Zerar Todo o Sistema'}
-                        </button>
-                    ) : (
-                        <div className="p-4 bg-red-950/20 rounded-xl border border-red-500/20 text-center">
-                            <p className="text-[9px] text-red-500 font-black uppercase tracking-widest">Acesso restrito apenas ao FOX ADM para zerar o banco de dados.</p>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>

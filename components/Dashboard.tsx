@@ -47,7 +47,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ members, payments, transac
         .filter(p => p.year < currentYear || (p.year === currentYear && p.month < currentMonth))
         .reduce((acc, curr) => acc + curr.amount, 0);
 
-    const earlyPaymentsRevenue = allReceivedThisMonth
+    const earlyPaymentsRevenue = payments
+        .filter(p => p.month === currentMonth && p.year === currentYear)
+        .filter(p => {
+             const payDate = new Date(p.date);
+             return payDate.getFullYear() < currentYear || (payDate.getFullYear() === currentYear && payDate.getMonth() < currentMonth);
+        })
+        .reduce((acc, curr) => acc + curr.amount, 0);
+
+    const futurePaymentsReceived = allReceivedThisMonth
         .filter(p => p.year > currentYear || (p.year === currentYear && p.month > currentMonth))
         .reduce((acc, curr) => acc + curr.amount, 0);
 
@@ -76,7 +84,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ members, payments, transac
       })
       .reduce((acc, curr) => acc + curr.amount, 0);
 
-    const totalRevenue = currentMonthRefRevenue + recoveredArrearsRevenue + earlyPaymentsRevenue + negotiationRevenue + extraRevenue;
+    const totalRevenue = currentMonthRefRevenue + recoveredArrearsRevenue + futurePaymentsReceived + negotiationRevenue + extraRevenue;
     const balance = totalRevenue - expenses;
 
     const currentMonthPaidCount = payments.filter(p => p.month === currentMonth && p.year === currentYear).length;

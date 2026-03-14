@@ -75,29 +75,39 @@ export const Infographics: React.FC<InfographicsProps> = ({ members, payments, t
         });
     }, [payments, transactions, selectedYear]);
 
-    // 3. Breakdown de Pagamentos (No Prazo vs Atrasados Recuperados)
+    // 3. Status das Mensalidades (Visão de Competência do Mês Selecionado)
     const competenceData = useMemo(() => {
-        const receiptsInPeriod = payments.filter(p => {
-            const d = new Date(p.date);
-            return d.getFullYear() === selectedYear;
-        });
+        const monthPayments = payments.filter(p => p.month === selectedMonth && p.year === selectedYear);
 
-        const onTimeTotal = receiptsInPeriod
-            .filter(p => p.month === new Date(p.date).getMonth() && p.year === new Date(p.date).getFullYear())
-            .reduce((acc, curr) => acc + curr.amount, 0);
-
-        const arrearsTotal = receiptsInPeriod
+        const onTimeTotal = monthPayments
             .filter(p => {
                 const payDate = new Date(p.date);
-                return p.year < payDate.getFullYear() || (p.year === payDate.getFullYear() && p.month < payDate.getMonth());
+                return payDate.getFullYear() === selectedYear && payDate.getMonth() === selectedMonth;
             })
             .reduce((acc, curr) => acc + curr.amount, 0);
 
-        return [
-            { name: 'Mensalidades em Dia', value: onTimeTotal, color: '#00d4ff' },
-            { name: 'Atrasados Recuperados', value: arrearsTotal, color: '#f59e0b' }
+        const arrearsTotal = monthPayments
+            .filter(p => {
+                const payDate = new Date(p.date);
+                return payDate.getFullYear() > selectedYear || (payDate.getFullYear() === selectedYear && payDate.getMonth() > selectedMonth);
+            })
+            .reduce((acc, curr) => acc + curr.amount, 0);
+
+        const earlyTotal = monthPayments
+            .filter(p => {
+                const payDate = new Date(p.date);
+                return payDate.getFullYear() < selectedYear || (payDate.getFullYear() === selectedYear && payDate.getMonth() < selectedMonth);
+            })
+            .reduce((acc, curr) => acc + curr.amount, 0);
+
+        const data = [
+            { name: 'Pagos no Prazo', value: onTimeTotal, color: '#00d4ff' },
+            { name: 'Recebidos Atrasados', value: arrearsTotal, color: '#f59e0b' },
+            { name: 'Pagos Antecipadamente', value: earlyTotal, color: '#2dd4bf' }
         ];
-    }, [payments, selectedYear]);
+
+        return data.filter(d => d.value > 0);
+    }, [payments, selectedYear, selectedMonth]);
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700 pb-12">
@@ -168,8 +178,8 @@ export const Infographics: React.FC<InfographicsProps> = ({ members, payments, t
                 <div className="glass-panel p-8 rounded-3xl border border-slate-800 shadow-xl flex flex-col">
                     <div className="flex items-center justify-between mb-8">
                         <div>
-                            <h3 className="text-lg font-black text-white uppercase tracking-tight">Origem da Receita</h3>
-                            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Anual: Em dia vs. Atrasados</p>
+                            <h3 className="text-lg font-black text-white uppercase tracking-tight">Status da Competência</h3>
+                            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Mensalidades de {MONTH_NAMES[selectedMonth]} {selectedYear}</p>
                         </div>
                         <History className="text-amber-500 opacity-50" size={24}/>
                     </div>
@@ -192,6 +202,11 @@ export const Infographics: React.FC<InfographicsProps> = ({ members, payments, t
                                 </PieChart>
                             </ResponsiveContainer>
                         </div>
+                        {competenceData.length === 0 && (
+                            <div className="text-center w-full mt-4">
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Nenhum pagamento registrado</p>
+                            </div>
+                        )}
                         <div className="w-full space-y-4 mt-4">
                             {competenceData.map((item, idx) => (
                                 <div key={idx} className="flex justify-between items-center p-3 bg-slate-950/40 rounded-xl border border-slate-800">

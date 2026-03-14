@@ -102,7 +102,7 @@ export const Negotiations: React.FC<NegotiationsProps> = ({ negotiations, member
              <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                        <Handshake className="text-pink-500"/> <span className="text-pink-500 uppercase font-black tracking-tighter">Negociação de Débitos</span>
+                        <Handshake className="text-pink-500"/> <span className="text-pink-500 uppercase font-black tracking-tighter">Negociação Parceladas</span>
                     </h2>
                     <p className="text-slate-400 text-sm font-bold uppercase tracking-widest text-[10px]">Clique no quadrado para marcar como pago e dar baixa.</p>
                 </div>

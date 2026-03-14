@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { ShieldCheck, User as UserIcon, Lock, ChevronRight } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 import { Member, User } from '../types';
+import { supabase } from '../lib/supabase';
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -23,20 +24,43 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onMemberLogin }) => {
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
 
-  const handleAdminSubmit = (e: React.FormEvent) => {
+  const handleAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAdmin) {
       setError('Selecione um perfil de administrador.');
       return;
     }
 
-    // Todos os administradores usam a mesma senha
-    const correctPassword = '162534';
+    try {
+      // Mapeia o nome de usuário para um email fictício que será cadastrado no Supabase
+      const emailMap: Record<string, string> = {
+        'Fox ADM': 'fox@vidanova.com.br',
+        'Adilson Presidente': 'adilson@vidanova.com.br',
+        'Edinaldo Tesoureiro': 'edinaldo@vidanova.com.br',
+        'Celma Social': 'celma@vidanova.com.br'
+      };
 
-    if (password === correctPassword) {
+      const userEmail = emailMap[selectedAdmin.username];
+      
+      if (!userEmail) {
+        setError('Email não configurado para este perfil.');
+        return;
+      }
+
+      // Tenta fazer o login real no Supabase Auth
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: userEmail,
+        password: password,
+      });
+
+      if (signInError) throw signInError;
+
+      // Se passou da autenticação, permite a entrada no sistema PWA
       onLogin(selectedAdmin);
-    } else {
-      setError('Senha incorreta para este perfil.');
+      
+    } catch (err: any) {
+      console.error("Auth error:", err);
+      setError('Senha incorreta ou usuário não autorizado.');
     }
   };
 

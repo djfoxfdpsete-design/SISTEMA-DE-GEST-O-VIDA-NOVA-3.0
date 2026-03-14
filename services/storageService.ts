@@ -84,7 +84,17 @@ export const StorageService = {
   deleteMembers: async (ids: string[]) => {
     const local = getLocal<Member>(STORAGE_KEYS.members);
     saveLocal(STORAGE_KEYS.members, local.filter(m => !ids.includes(m.id)));
-    try { await supabase.from('members').delete().in('id', ids); } catch (e) {}
+    
+    try {
+      // Excluir em lotes de 100 para evitar limites de URL/Payload
+      const chunkSize = 100;
+      for (let i = 0; i < ids.length; i += chunkSize) {
+        const chunk = ids.slice(i, i + chunkSize);
+        await supabase.from('members').delete().in('id', chunk);
+      }
+    } catch (e) {
+      console.error("Erro na exclusão em massa:", e);
+    }
   },
   importData: async (members: Member[]) => {
     const local = getLocal<Member>(STORAGE_KEYS.members);

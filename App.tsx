@@ -19,6 +19,7 @@ import { Reservations } from './components/Reservations';
 import { Budgeting } from './components/Budgeting';
 import { MemberPortal } from './components/MemberPortal';
 import { StorageService } from './services/storageService';
+import { supabase } from './lib/supabase';
 import { Member, Payment, PaymentMethod, Transaction, Poll, Asset, MemberMessage, User, Negotiation, Reservation, Budget } from './types';
 import { Loader2 } from 'lucide-react';
 
@@ -78,11 +79,51 @@ function App() {
     const handleOffline = () => setIsOnline(false);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+
+    // Escuta mudanças de sessão de autenticação do Supabase
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session && session.user) {
+        // Se logou com sucesso no Supabase, mapeamos o email de volta para o perfil ADMIN
+        const emailMapRev: Record<string, any> = {
+          'fox@vidanova.com.br': { id: '1', username: 'Fox ADM', role: 'FOX_ADM', subtitle: 'Ouvidor / Administrador' },
+          'adilson@vidanova.com.br': { id: '2', username: 'Adilson Presidente', role: 'PRESIDENTE' },
+          'edinaldo@vidanova.com.br': { id: '3', username: 'Edinaldo Tesoureiro', role: 'TESOUREIRO' },
+          'celma@vidanova.com.br': { id: '4', username: 'Celma Social', role: 'TESOUREIRO', subtitle: 'Assistente social' }
+        };
+        const mail = session.user.email || '';
+        if (emailMapRev[mail]) {
+            setCurrentAdmin(emailMapRev[mail]);
+            setAuthMode('admin');
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setCurrentAdmin(null);
+        if (authMode === 'admin') setAuthMode('guest');
+      }
+    });
+
+    // Pega a sessão inicial caso tenha dado F5
+    supabase.auth.getSession().then(({ data: { session } }) => {
+       if (session && session.user) {
+           const emailMapRev: Record<string, any> = {
+             'fox@vidanova.com.br': { id: '1', username: 'Fox ADM', role: 'FOX_ADM', subtitle: 'Ouvidor / Administrador' },
+             'adilson@vidanova.com.br': { id: '2', username: 'Adilson Presidente', role: 'PRESIDENTE' },
+             'edinaldo@vidanova.com.br': { id: '3', username: 'Edinaldo Tesoureiro', role: 'TESOUREIRO' },
+             'celma@vidanova.com.br': { id: '4', username: 'Celma Social', role: 'TESOUREIRO', subtitle: 'Assistente social' }
+           };
+           const mail = session.user.email || '';
+           if (emailMapRev[mail]) {
+               setCurrentAdmin(emailMapRev[mail]);
+               setAuthMode('admin');
+           }
+       }
+    });
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      subscription.unsubscribe();
     };
-  }, [refreshData]);
+  }, [refreshData, authMode]);
 
   const commit = async (action: () => Promise<void>, logDetails?: { action: any, entity: any, details: string }) => {
     setSaveStatus('saving');
@@ -150,7 +191,10 @@ function App() {
     commit(() => StorageService.savePoll(updatedPoll));
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+      // Faz o logout real na API do Supabase, o onAuthStateChange cuida de limpar os estados
+      await supabase.auth.signOut();
+      
       setAuthMode('guest');
       setCurrentMember(null);
       setCurrentAdmin(null);

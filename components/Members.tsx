@@ -11,10 +11,12 @@ interface MembersProps {
   onSave: (member: Member) => void;
   onImport: (members: Member[]) => void;
   onDelete: (id: string) => void;
+  onBulkDelete?: (ids: string[]) => void;
 }
 
-export const Members: React.FC<MembersProps> = ({ members, onSave, onImport, onDelete }) => {
+export const Members: React.FC<MembersProps> = ({ members, onSave, onImport, onDelete, onBulkDelete }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
@@ -31,6 +33,32 @@ export const Members: React.FC<MembersProps> = ({ members, onSave, onImport, onD
   const filteredMembers = members.filter(m => 
     m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.phone.includes(searchTerm)
   );
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(filteredMembers.map(m => m.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectRow = (id: string, checked: boolean) => {
+    const next = new Set(selectedIds);
+    if (checked) {
+      next.add(id);
+    } else {
+      next.delete(id);
+    }
+    setSelectedIds(next);
+  };
+
+  const handleBulkDeleteAction = () => {
+    if (selectedIds.size === 0) return;
+    if (confirm(`Deseja realmente excluir ${selectedIds.size} associados selecionados? Esta ação é irreversível.`)) {
+      onBulkDelete?.(Array.from(selectedIds));
+      setSelectedIds(new Set());
+    }
+  };
 
   const handleOpenModal = (member?: Member) => {
     setErrorMsg(null);
@@ -216,6 +244,15 @@ export const Members: React.FC<MembersProps> = ({ members, onSave, onImport, onD
           </div>
           <input type="file" ref={fileInputRef} className="hidden" accept=".csv, .xlsx, .xls" onChange={handleFileUpload} />
           
+          {selectedIds.size > 0 && (
+            <button 
+                onClick={handleBulkDeleteAction}
+                className="flex items-center justify-center gap-2 px-6 py-2 bg-red-500/10 text-red-500 border border-red-500/20 font-bold rounded-xl hover:bg-red-500 hover:text-white transition-all text-xs uppercase tracking-widest animate-in slide-in-from-right-4"
+            >
+                <Trash2 size={16} /> Excluir Selecionados ({selectedIds.size})
+            </button>
+          )}
+
           <button onClick={() => handleOpenModal()} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 bg-neon-blue text-slate-900 font-bold rounded-xl hover:brightness-110 transition-all text-xs uppercase tracking-widest">
             <Plus size={16} /> Novo Cadastro
           </button>
@@ -227,6 +264,14 @@ export const Members: React.FC<MembersProps> = ({ members, onSave, onImport, onD
           <table className="w-full text-left border-separate border-spacing-0">
             <thead className="bg-slate-950/50 text-slate-500 uppercase text-[10px] font-black tracking-[0.2em]">
               <tr>
+                <th className="px-6 py-4 border-b border-slate-800 w-12 text-center">
+                   <input 
+                    type="checkbox" 
+                    className="accent-neon-blue"
+                    checked={filteredMembers.length > 0 && selectedIds.size === filteredMembers.length}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                   />
+                </th>
                 <th className="px-6 py-4 border-b border-slate-800 w-16">#</th>
                 <th className="px-6 py-4 border-b border-slate-800">Associado Único</th>
                 <th className="px-6 py-4 border-b border-slate-800">Documentos</th>
@@ -236,7 +281,15 @@ export const Members: React.FC<MembersProps> = ({ members, onSave, onImport, onD
             </thead>
             <tbody className="divide-y divide-slate-800/50">
               {filteredMembers.map((member, index) => (
-                <tr key={member.id} className="hover:bg-slate-800/20 transition-colors group">
+                <tr key={member.id} className={`hover:bg-slate-800/20 transition-colors group ${selectedIds.has(member.id) ? 'bg-neon-blue/5' : ''}`}>
+                  <td className="px-6 py-4 text-center">
+                    <input 
+                        type="checkbox" 
+                        className="accent-neon-blue"
+                        checked={selectedIds.has(member.id)}
+                        onChange={(e) => handleSelectRow(member.id, e.target.checked)}
+                    />
+                  </td>
                   <td className="px-6 py-4 font-mono text-[10px] text-neon-blue font-black">{(index + 1).toString().padStart(2, '0')}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">

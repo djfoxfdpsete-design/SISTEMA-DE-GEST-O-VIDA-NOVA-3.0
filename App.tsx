@@ -142,6 +142,7 @@ function App() {
 
   const handleMemberSave = (member: Member) => commit(() => StorageService.saveMember(member), { action: 'UPDATE', entity: 'MEMBER', details: `Associado: ${member.name}` });
   const handleMemberDelete = (id: string) => commit(() => StorageService.deleteMember(id), { action: 'DELETE', entity: 'MEMBER', details: `Removido ID: ${id}` });
+  const handleMemberBulkDelete = (ids: string[]) => commit(() => StorageService.deleteMembers(ids), { action: 'DELETE', entity: 'MEMBER', details: `Remoção em massa: ${ids.length} membros` });
   const handleMemberImport = (importedMembers: Member[]) => commit(() => StorageService.importData(importedMembers), { action: 'CREATE', entity: 'MEMBER', details: `Importação: ${importedMembers.length} membros` });
   
   const handlePaymentToggle = (memberId: string, month: number, year: number, method: PaymentMethod) => {
@@ -221,7 +222,7 @@ function App() {
     switch (activeTab) {
       case 'dashboard': return <Dashboard members={members} payments={payments} transactions={transactions} negotiations={negotiations} />;
       case 'infographics': return <Infographics members={members} payments={payments} transactions={transactions} />;
-      case 'members': return <Members members={members} onSave={handleMemberSave} onImport={handleMemberImport} onDelete={handleMemberDelete} />;
+      case 'members': return <Members members={members} onSave={handleMemberSave} onImport={handleMemberImport} onDelete={handleMemberDelete} onBulkDelete={handleMemberBulkDelete} />;
       case 'payments': return <Payments members={members} payments={payments} user={currentAdmin} onTogglePayment={handlePaymentToggle} onRemovePayment={handlePaymentRemove} />;
       case 'negotiations': return <Negotiations negotiations={negotiations} members={members} onSave={handleNegotiationSave} onDelete={handleNegotiationDelete} user={currentAdmin} />;
       case 'reservations': return <Reservations reservations={reservations} members={members} onSave={handleReservationSave} onDelete={handleReservationDelete} />;

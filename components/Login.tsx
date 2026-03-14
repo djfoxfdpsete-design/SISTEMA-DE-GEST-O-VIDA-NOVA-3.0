@@ -30,14 +30,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onMemberLogin }) => {
       return;
     }
 
-    // Definição de senhas conforme solicitado
-    let correctPassword = '1234'; // Senha padrão para outros
-    
-    if (selectedAdmin.username === 'Fox ADM') {
-      correctPassword = '162534';
-    } else if (selectedAdmin.username === 'Edinaldo Tesoureiro') {
-      correctPassword = '162534edinaldo';
-    }
+    // Todos os administradores usam a mesma senha
+    const correctPassword = '162534';
 
     if (password === correctPassword) {
       onLogin(selectedAdmin);

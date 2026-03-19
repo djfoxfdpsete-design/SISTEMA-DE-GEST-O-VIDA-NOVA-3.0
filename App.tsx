@@ -73,6 +73,23 @@ function App() {
     }
   }, []);
 
+  // Leitura rápida do cache local — sem rede, sem espera
+  const refreshLocal = useCallback(() => {
+    const gl = (key: string) => {
+      const data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : [];
+    };
+    setMembers(gl('vn_members'));
+    setPayments(gl('vn_payments'));
+    setTransactions(gl('vn_transactions'));
+    setPolls(gl('vn_polls'));
+    setAssets(gl('vn_assets'));
+    setMessages(gl('vn_messages'));
+    setNegotiations(gl('vn_negotiations'));
+    setReservations(gl('vn_reservations'));
+    setBudgets(gl('vn_budgets'));
+  }, []);
+
   useEffect(() => {
     refreshData();
     const handleOnline = () => setIsOnline(true);
@@ -131,13 +148,14 @@ function App() {
     try {
         await action();
         if (logDetails) {
-          await StorageService.logAction(logDetails.action, logDetails.entity, logDetails.details, currentAdmin?.username || currentMember?.name || 'System');
+          // Fire-and-forget: log em background, não bloqueia a UI
+          StorageService.logAction(logDetails.action, logDetails.entity, logDetails.details, currentAdmin?.username || currentMember?.name || 'System');
         }
-        await refreshData();
+        refreshLocal(); // Lê do localStorage — instantâneo!
         setSaveStatus('saved');
     } catch (e) {
         setSaveStatus('saved');
-        await refreshData();
+        refreshLocal();
     }
   };
 

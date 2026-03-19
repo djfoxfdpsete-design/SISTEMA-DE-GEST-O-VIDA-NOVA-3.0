@@ -14,8 +14,11 @@ interface MembersProps {
   onBulkDelete?: (ids: string[]) => void;
 }
 
+const PAGE_SIZE = 50;
+
 export const Members: React.FC<MembersProps> = ({ members, onSave, onImport, onDelete, onBulkDelete }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -32,12 +35,18 @@ export const Members: React.FC<MembersProps> = ({ members, onSave, onImport, onD
     name: '', phone: '', status: MemberStatus.ACTIVE, documents: []
   });
 
-  const filteredMembers = useMemo(() =>
-    members.filter(m =>
+  const filteredMembers = useMemo(() => {
+    setCurrentPage(1); // volta pra pág 1 ao filtrar
+    return members.filter(m =>
       m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.phone.includes(searchTerm)
-    ),
-    [members, searchTerm]
-  );
+    );
+  }, [members, searchTerm]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredMembers.length / PAGE_SIZE));
+  const pagedMembers = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredMembers.slice(start, start + PAGE_SIZE);
+  }, [filteredMembers, currentPage]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -283,8 +292,12 @@ export const Members: React.FC<MembersProps> = ({ members, onSave, onImport, onD
                    <input 
                     type="checkbox" 
                     className="accent-neon-blue"
-                    checked={filteredMembers.length > 0 && selectedIds.size === filteredMembers.length}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    checked={pagedMembers.length > 0 && pagedMembers.every(m => selectedIds.has(m.id))}
+                    onChange={(e) => {
+                      const next = new Set(selectedIds);
+                      pagedMembers.forEach(m => e.target.checked ? next.add(m.id) : next.delete(m.id));
+                      setSelectedIds(next);
+                    }}
                    />
                 </th>
                 <th className="px-6 py-4 border-b border-slate-800 w-16">#</th>
@@ -295,7 +308,7 @@ export const Members: React.FC<MembersProps> = ({ members, onSave, onImport, onD
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">
-              {filteredMembers.map((member, index) => (
+              {pagedMembers.map((member, index) => {const globalIndex = (currentPage - 1) * PAGE_SIZE + index; return (
                 <tr key={member.id} className={`hover:bg-slate-800/20 transition-colors group ${selectedIds.has(member.id) ? 'bg-neon-blue/5' : ''}`}>
                   <td className="px-6 py-4 text-center">
                     <input 
@@ -345,11 +358,37 @@ export const Members: React.FC<MembersProps> = ({ members, onSave, onImport, onD
                     </div>
                   </td>
                 </tr>
-              ))}
+              ); })}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Controles de Paginação */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-2">
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+            Página <span className="text-white">{currentPage}</span> de <span className="text-white">{totalPages}</span>
+            &nbsp;·&nbsp; {filteredMembers.length} associados
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-slate-800 border border-slate-700 text-white text-[10px] font-black uppercase rounded-xl hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all tracking-widest"
+            >
+              ← Anterior
+            </button>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 bg-neon-blue text-slate-900 text-[10px] font-black uppercase rounded-xl hover:brightness-110 disabled:opacity-30 disabled:cursor-not-allowed transition-all tracking-widest"
+            >
+              Próxima →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Documentos */}
       {isDocModalOpen && editingMember && (

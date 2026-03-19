@@ -97,7 +97,7 @@ function App() {
         }
       } else if (event === 'SIGNED_OUT') {
         setCurrentAdmin(null);
-        if (authMode === 'admin') setAuthMode('guest');
+        setAuthMode('guest');
       }
     });
 
@@ -123,7 +123,8 @@ function App() {
       window.removeEventListener('offline', handleOffline);
       subscription.unsubscribe();
     };
-  }, [refreshData, authMode]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshData]);
 
   const commit = async (action: () => Promise<void>, logDetails?: { action: any, entity: any, details: string }) => {
     setSaveStatus('saving');

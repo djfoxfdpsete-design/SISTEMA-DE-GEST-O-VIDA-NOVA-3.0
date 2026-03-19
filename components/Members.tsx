@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Plus, Search, FileUp, FileDown, Edit2, Trash2, Filter, AlertCircle, Users as UsersIcon, FileText, Upload, ExternalLink, Loader2, XCircle } from 'lucide-react';
 import { Member, MemberStatus, MemberDocument } from '../types';
 import { StorageService } from '../services/storageService';
@@ -32,8 +32,11 @@ export const Members: React.FC<MembersProps> = ({ members, onSave, onImport, onD
     name: '', phone: '', status: MemberStatus.ACTIVE, documents: []
   });
 
-  const filteredMembers = members.filter(m => 
-    m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.phone.includes(searchTerm)
+  const filteredMembers = useMemo(() =>
+    members.filter(m =>
+      m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.phone.includes(searchTerm)
+    ),
+    [members, searchTerm]
   );
 
   const handleSelectAll = (checked: boolean) => {

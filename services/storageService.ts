@@ -1,6 +1,6 @@
 
 import { supabase } from '../lib/supabase';
-import { Member, Payment, Transaction, Poll, Asset, MemberMessage, AuditLog, Negotiation, MemberDocument, Reservation, Budget } from '../types';
+import { Member, Payment, Transaction, Poll, Asset, MemberMessage, AuditLog, Negotiation, MemberDocument, Reservation, Budget, Attendance } from '../types';
 
 const STORAGE_KEYS = {
   members: 'vn_members',
@@ -13,6 +13,7 @@ const STORAGE_KEYS = {
   negotiations: 'vn_negotiations',
   reservations: 'vn_reservations',
   budgets: 'vn_budgets',
+  attendances: 'vn_attendances',
   last_backup: 'vn_last_backup'
 };
 
@@ -124,6 +125,30 @@ export const StorageService = {
     const updated = local.filter(p => !(p.memberId === memberId && p.month === month && p.year === year));
     saveLocal(STORAGE_KEYS.payments, updated);
     try { await supabase.from('payments').delete().match({ memberId, month, year }); } catch (e) {}
+  },
+
+  // Presenças
+  getAttendances: async (): Promise<Attendance[]> => {
+    try {
+      const { data, error } = await supabase.from('attendances').select('*');
+      if (error) throw error;
+      if (data) saveLocal(STORAGE_KEYS.attendances, data);
+      return data || [];
+    } catch (e) {
+      return getLocal<Attendance>(STORAGE_KEYS.attendances);
+    }
+  },
+  saveAttendance: async (attendance: Attendance) => {
+    const local = getLocal<Attendance>(STORAGE_KEYS.attendances);
+    const updated = [...local.filter(a => a.id !== attendance.id), attendance];
+    saveLocal(STORAGE_KEYS.attendances, updated);
+    try { await supabase.from('attendances').upsert(attendance); } catch (e) {}
+  },
+  removeAttendance: async (memberId: string, month: number, year: number) => {
+    const local = getLocal<Attendance>(STORAGE_KEYS.attendances);
+    const updated = local.filter(a => !(a.memberId === memberId && a.month === month && a.year === year));
+    saveLocal(STORAGE_KEYS.attendances, updated);
+    try { await supabase.from('attendances').delete().match({ memberId, month, year }); } catch (e) {}
   },
 
   // Caixa (Transações)
@@ -302,6 +327,7 @@ export const StorageService = {
         supabase.from('audit_logs').delete().neq('id', '0'),
         supabase.from('reservations').delete().neq('id', '0'),
         supabase.from('budgets').delete().neq('id', '0'),
+        supabase.from('attendances').delete().neq('id', '0'),
       ]);
     } catch (e) {}
   },
@@ -317,6 +343,7 @@ export const StorageService = {
       negotiations: getLocal(STORAGE_KEYS.negotiations),
       reservations: getLocal(STORAGE_KEYS.reservations),
       budgets: getLocal(STORAGE_KEYS.budgets),
+      attendances: getLocal(STORAGE_KEYS.attendances),
       audit_logs: getLocal(STORAGE_KEYS.audit_logs),
       timestamp: new Date().toISOString(),
       version: "3.1"
@@ -340,6 +367,7 @@ export const StorageService = {
       if (data.messages) saveLocal(STORAGE_KEYS.messages, data.messages);
       if (data.reservations) saveLocal(STORAGE_KEYS.reservations, data.reservations);
       if (data.budgets) saveLocal(STORAGE_KEYS.budgets, data.budgets);
+      if (data.attendances) saveLocal(STORAGE_KEYS.attendances, data.attendances);
       if (data.audit_logs) saveLocal(STORAGE_KEYS.audit_logs, data.audit_logs);
       
       const syncPromises = [];
@@ -349,6 +377,7 @@ export const StorageService = {
       if (data.negotiations) syncPromises.push(supabase.from('negotiations').upsert(data.negotiations));
       if (data.assets) syncPromises.push(supabase.from('assets').upsert(data.assets));
       if (data.budgets) syncPromises.push(supabase.from('budgets').upsert(data.budgets));
+      if (data.attendances) syncPromises.push(supabase.from('attendances').upsert(data.attendances));
       
       await Promise.allSettled(syncPromises);
       return true;

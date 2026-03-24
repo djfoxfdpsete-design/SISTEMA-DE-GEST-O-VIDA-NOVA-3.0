@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, Users, CreditCard, Calculator, LogOut, Menu, X, FileText, Bell, AlertTriangle, Wallet, Calendar, Vote, Settings, Check, Loader2, Box, PieChart, MessageSquare, Wifi, WifiOff, Handshake, BarChart3, Target } from 'lucide-react';
+import { Home, Users, CreditCard, Calculator, LogOut, Menu, X, FileText, Bell, AlertTriangle, Wallet, Calendar, Vote, Settings, Check, Loader2, Box, PieChart, MessageSquare, Wifi, WifiOff, Handshake, BarChart3, Target, ClipboardCheck } from 'lucide-react';
 import { Member, User } from '../types';
 
 interface LayoutProps {
@@ -22,6 +22,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
     { id: 'dashboard', label: 'Painel Geral', icon: Home, roles: ['FOX_ADM', 'PRESIDENTE', 'TESOUREIRO'], tooltip: 'Resumo financeiro e estatísticas em tempo real.' },
     { id: 'infographics', label: 'Infográficos', icon: BarChart3, roles: ['FOX_ADM', 'PRESIDENTE', 'TESOUREIRO'], tooltip: 'Análise visual profunda de dados, tendências e comparativos.' },
     { id: 'members', label: 'Associados & Docs', icon: Users, roles: ['FOX_ADM', 'PRESIDENTE', 'TESOUREIRO'], tooltip: 'Gestão de cadastro de membros e documentos.' },
+    { id: 'attendance', label: 'Controle de Presença', icon: ClipboardCheck, roles: ['FOX_ADM', 'PRESIDENTE', 'TESOUREIRO'], tooltip: 'Controle de presenças e faltas em reuniões.' },
     { id: 'payments', label: 'Mensalidades', icon: CreditCard, roles: ['FOX_ADM', 'TESOUREIRO', 'PRESIDENTE'], tooltip: 'Controle de pagamentos mensais e geração de recibos.' },
     { id: 'negotiations', label: 'Negociação Parceladas', icon: Handshake, roles: ['FOX_ADM', 'TESOUREIRO', 'PRESIDENTE'], color: 'text-pink-500', tooltip: 'Criação e acompanhamento de acordos de dívidas.' },
     { id: 'cashflow', label: 'Fluxo de Caixa', icon: Wallet, roles: ['FOX_ADM', 'TESOUREIRO'], tooltip: 'Registro de entradas e saídas extras da associação.' },

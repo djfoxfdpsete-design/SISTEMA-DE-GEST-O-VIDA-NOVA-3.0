@@ -4,6 +4,7 @@ import { HashRouter } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
 import { Infographics } from './components/Infographics';
+import { Members } from './components/Members';
 import { Payments } from './components/Payments';
 import { Attendances } from './components/Attendances';
 import { CashFlow } from './components/CashFlow';
@@ -17,6 +18,7 @@ import { Ombudsman } from './components/Ombudsman';
 import { Negotiations } from './components/Negotiations';
 import { Reservations } from './components/Reservations';
 import { Budgeting } from './components/Budgeting';
+import { MemberPortal } from './components/MemberPortal';
 import { StorageService } from './services/storageService';
 import { supabase } from './lib/supabase';
 import { Member, Payment, PaymentMethod, Transaction, Poll, Asset, MemberMessage, User, Negotiation, Reservation, Budget, Attendance, AttendanceStatus } from './types';
@@ -37,6 +39,7 @@ function App() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [polls, setPolls] = useState<Poll[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [messages, setMessages] = useState<MemberMessage[]>([]);
   const [negotiations, setNegotiations] = useState<Negotiation[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -83,6 +86,7 @@ function App() {
     setTransactions(gl('vn_transactions'));
     setPolls(gl('vn_polls'));
     setAssets(gl('vn_assets'));
+    setMessages(gl('vn_messages'));
     setNegotiations(gl('vn_negotiations'));
     setReservations(gl('vn_reservations'));
     setBudgets(gl('vn_budgets'));
@@ -193,6 +197,7 @@ function App() {
   const handleNegotiationSave = (negotiation: Negotiation) => commit(() => StorageService.saveNegotiation(negotiation), { action: 'UPDATE', entity: 'NEGOTIATION', details: `Acordo: ${negotiation.id}` });
   const handleNegotiationDelete = (id: string) => commit(() => StorageService.deleteNegotiation(id), { action: 'DELETE', entity: 'NEGOTIATION', details: `Acordo removido ID: ${id}` });
 
+  const handleReservationSave = (res: Reservation) => commit(() => StorageService.saveReservation(res), { action: 'CREATE', entity: 'RESERVATION', details: `Reserva em ${res.date}` });
   const handleReservationDelete = (id: string) => commit(() => StorageService.deleteReservation(id), { action: 'DELETE', entity: 'RESERVATION', details: `Reserva cancelada ID: ${id}` });
   const handleBudgetSave = (budget: Budget) => commit(() => StorageService.saveBudget(budget));
 

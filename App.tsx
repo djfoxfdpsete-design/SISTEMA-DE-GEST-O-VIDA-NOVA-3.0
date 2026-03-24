@@ -47,7 +47,7 @@ function App() {
 
   const refreshData = useCallback(async () => {
     try {
-      const [m, p, t, po, a, msg, neg, res, b] = await Promise.all([
+      const [m, p, t, po, a, msg, neg, res, b, att] = await Promise.all([
         StorageService.getMembers(),
         StorageService.getPayments(),
         StorageService.getTransactions(),
@@ -56,7 +56,8 @@ function App() {
         StorageService.getMessages(),
         StorageService.getNegotiations(),
         StorageService.getReservations(),
-        StorageService.getBudgets()
+        StorageService.getBudgets(),
+        StorageService.getAttendances()
       ]);
 
       setMembers(m);
@@ -68,6 +69,7 @@ function App() {
       setNegotiations(neg);
       setReservations(res);
       setBudgets(b);
+      setAttendances(att);
     } catch (err) {
       console.warn("Erro ao buscar dados remotos, usando cache local.");
     } finally {

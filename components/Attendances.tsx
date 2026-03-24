@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Check, Filter, Users as UsersIcon, AlertCircle, XCircle } from 'lucide-react';
 import { Member, Attendance, AttendanceStatus, MemberStatus, User } from '../types';
 import { MONTH_NAMES } from '../constants';
@@ -15,12 +15,14 @@ export const Attendances: React.FC<AttendancesProps> = ({ members, attendances, 
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [selectedStatus, setSelectedStatus] = useState<AttendanceStatus>(AttendanceStatus.PRESENT);
   const [searchTerm, setSearchTerm] = useState('');
-
-  const canManageAttendances = ['FOX_ADM', 'PRESIDENTE', 'TESOUREIRO'].includes(user?.role || '');
-
+  
   const today = new Date();
   const currentMonthIdx = today.getMonth();
   const currentYearReal = today.getFullYear();
+
+  const [summaryMonth, setSummaryMonth] = useState(currentMonthIdx);
+
+  const canManageAttendances = ['FOX_ADM', 'PRESIDENTE', 'TESOUREIRO'].includes(user?.role || '');
 
   const getAttendance = (memberId: string, month: number) => {
     return attendances.find(a => a.memberId === memberId && a.month === month && a.year === currentYear);
@@ -44,6 +46,25 @@ export const Attendances: React.FC<AttendancesProps> = ({ members, attendances, 
   const filteredMembers = members
     .filter(m => m.status === MemberStatus.ACTIVE)
     .filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const summaryStats = useMemo(() => {
+    let present = 0;
+    let justified = 0;
+    let unjustified = 0;
+    
+    // Calcula as estatísticas sobre os membros ativos
+    const activeMemberIds = members.filter(m => m.status === MemberStatus.ACTIVE).map(m => m.id);
+
+    attendances.forEach(a => {
+      if (a.year === currentYear && a.month === summaryMonth && activeMemberIds.includes(a.memberId)) {
+        if (a.status === AttendanceStatus.PRESENT) present++;
+        else if (a.status === AttendanceStatus.JUSTIFIED) justified++;
+        else if (a.status === AttendanceStatus.UNJUSTIFIED) unjustified++;
+      }
+    });
+
+    return { present, justified, unjustified };
+  }, [attendances, currentYear, summaryMonth, members]);
 
   const getStatusColorAndIcon = (status: AttendanceStatus) => {
     switch (status) {
@@ -83,6 +104,24 @@ export const Attendances: React.FC<AttendancesProps> = ({ members, attendances, 
             <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Total Ativos</span>
             <div className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs font-black text-neon-blue flex items-center gap-2">
               <UsersIcon size={12}/> {filteredMembers.length}
+            </div>
+          </div>
+          
+          <div className="hidden xl:flex flex-col gap-1">
+            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Resumo Mensal</span>
+            <div className="flex items-center gap-3 bg-slate-900/80 p-1.5 px-3 rounded-xl border border-slate-700">
+              <select 
+                value={summaryMonth} 
+                onChange={(e) => setSummaryMonth(Number(e.target.value))}
+                className="bg-transparent text-slate-300 text-xs font-bold outline-none cursor-pointer mr-2"
+              >
+                {MONTH_NAMES.map((m, i) => <option key={m} value={i} className="bg-slate-900">{m}</option>)}
+              </select>
+              <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-wider border-l border-slate-700 pl-3">
+                <div className="flex items-center gap-1 text-emerald-500 transition-all hover:scale-110" title="Presenças"><Check size={12}/> {summaryStats.present}</div>
+                <div className="flex items-center gap-1 text-orange-500 transition-all hover:scale-110" title="Ausências Justificadas"><AlertCircle size={12}/> {summaryStats.justified}</div>
+                <div className="flex items-center gap-1 text-red-500 transition-all hover:scale-110" title="Faltas Não Justificadas"><XCircle size={12}/> {summaryStats.unjustified}</div>
+              </div>
             </div>
           </div>
         </div>

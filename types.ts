@@ -5,6 +5,12 @@ export enum PaymentMethod {
   CARD = 'Cartão'
 }
 
+export enum AttendanceStatus {
+  PRESENT = 'Presença',
+  JUSTIFIED = 'Ausência Justificada',
+  UNJUSTIFIED = 'Ausência Não Justificada'
+}
+
 export enum MemberStatus {
   ACTIVE = 'Ativo',
   INACTIVE = 'Inativo'
@@ -27,6 +33,16 @@ export interface Payment {
   date: string; // ISO String
   method: PaymentMethod;
   recordedBy: string; // Audit
+}
+
+export interface Attendance {
+  id: string;
+  memberId: string;
+  month: number;
+  year: number;
+  status: AttendanceStatus;
+  date: string;
+  recordedBy: string;
 }
 
 export interface Member {
@@ -90,7 +106,7 @@ export interface Asset {
 export interface AuditLog {
   id: string;
   action: 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'RESTORE';
-  entity: 'MEMBER' | 'PAYMENT' | 'TRANSACTION' | 'ASSET' | 'SYSTEM' | 'MESSAGE' | 'NEGOTIATION' | 'RESERVATION';
+  entity: 'MEMBER' | 'PAYMENT' | 'TRANSACTION' | 'ASSET' | 'SYSTEM' | 'MESSAGE' | 'NEGOTIATION' | 'RESERVATION' | 'ATTENDANCE';
   details: string;
   timestamp: string;
   user: string;

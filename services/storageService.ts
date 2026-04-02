@@ -132,8 +132,20 @@ export const StorageService = {
     try {
       const { data, error } = await supabase.from('attendances').select('*');
       if (error) throw error;
-      if (data) saveLocal(STORAGE_KEYS.attendances, data);
-      return data || [];
+      
+      // Mapeamento seguro: Caso a tabela no Supabase tenha sido criada com colunas minúsculas
+      const mappedData = data?.map(item => ({
+        id: item.id,
+        memberId: item.memberId || item.memberid,
+        month: item.month,
+        year: item.year,
+        status: item.status,
+        date: item.date,
+        recordedBy: item.recordedBy || item.recordedby
+      })) || [];
+
+      if (data) saveLocal(STORAGE_KEYS.attendances, mappedData);
+      return mappedData;
     } catch (e) {
       return getLocal<Attendance>(STORAGE_KEYS.attendances);
     }

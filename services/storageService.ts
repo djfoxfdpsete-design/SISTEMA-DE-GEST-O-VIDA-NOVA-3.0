@@ -144,13 +144,18 @@ export const StorageService = {
     saveLocal(STORAGE_KEYS.attendances, updated);
     try {
       // Usar a rota segura para contornar tabelas que possam estar sem a chave primária (Primary Key) formalizada
-      const { data } = await supabase.from('attendances').select('id').eq('id', attendance.id);
+      const { data, error: selError } = await supabase.from('attendances').select('id').eq('id', attendance.id);
+      if (selError) { alert("Supabase Select Error: " + selError.message); }
+      
       if (data && data.length > 0) {
-        await supabase.from('attendances').update(attendance).eq('id', attendance.id);
+        const { error: updErr } = await supabase.from('attendances').update(attendance).eq('id', attendance.id);
+        if (updErr) alert("Erro Supabase (Update): " + updErr.message);
       } else {
-        await supabase.from('attendances').insert(attendance);
+        const { error: insErr } = await supabase.from('attendances').insert(attendance);
+        if (insErr) alert("Erro Supabase (Insert): " + insErr.message);
       }
-    } catch (e) {
+    } catch (e: any) {
+      alert("Erro crítico no sistema de presença: " + e.message);
       console.warn("Erro ao salvar presença: ", e);
     }
   },

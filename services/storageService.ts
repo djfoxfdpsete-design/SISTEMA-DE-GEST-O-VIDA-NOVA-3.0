@@ -142,7 +142,17 @@ export const StorageService = {
     const local = getLocal<Attendance>(STORAGE_KEYS.attendances);
     const updated = [...local.filter(a => a.id !== attendance.id), attendance];
     saveLocal(STORAGE_KEYS.attendances, updated);
-    try { await supabase.from('attendances').upsert(attendance); } catch (e) {}
+    try {
+      // Usar a rota segura para contornar tabelas que possam estar sem a chave primária (Primary Key) formalizada
+      const { data } = await supabase.from('attendances').select('id').eq('id', attendance.id);
+      if (data && data.length > 0) {
+        await supabase.from('attendances').update(attendance).eq('id', attendance.id);
+      } else {
+        await supabase.from('attendances').insert(attendance);
+      }
+    } catch (e) {
+      console.warn("Erro ao salvar presença: ", e);
+    }
   },
   removeAttendance: async (memberId: string, month: number, year: number) => {
     const local = getLocal<Attendance>(STORAGE_KEYS.attendances);

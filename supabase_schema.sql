@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS public.members (
     name TEXT NOT NULL,
     phone TEXT,
     "joinedAt" TEXT,
-    status TEXT NOT NULL
+    status TEXT NOT NULL,
+    documents JSONB DEFAULT '[]'::jsonb
 );
 
 -- 2. Payments
@@ -133,3 +134,17 @@ CREATE POLICY "Allow ALL" ON public.budgets FOR ALL USING (true);
 CREATE POLICY "Allow ALL" ON public.polls FOR ALL USING (true);
 CREATE POLICY "Allow ALL" ON public.messages FOR ALL USING (true);
 CREATE POLICY "Allow ALL" ON public.audit_logs FOR ALL USING (true);
+
+-- 11. Attendances
+CREATE TABLE IF NOT EXISTS public.attendances (
+    id TEXT PRIMARY KEY,
+    "memberId" TEXT REFERENCES public.members(id) ON DELETE CASCADE,
+    month INTEGER NOT NULL,
+    year INTEGER NOT NULL,
+    status TEXT NOT NULL,
+    date TEXT NOT NULL,
+    "recordedBy" TEXT
+);
+
+ALTER TABLE public.attendances ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow ALL" ON public.attendances FOR ALL USING (true);

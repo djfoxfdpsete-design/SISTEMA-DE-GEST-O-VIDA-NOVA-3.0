@@ -102,6 +102,22 @@ function App() {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    // Configuração do Supabase Realtime para sincronização em tempo real
+    let syncTimeout: ReturnType<typeof setTimeout>;
+    const realtimeChannel = supabase.channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public' },
+        (_payload) => {
+          // Debounce para evitar múltiplas requisições simultâneas
+          clearTimeout(syncTimeout);
+          syncTimeout = setTimeout(() => {
+            refreshData();
+          }, 500);
+        }
+      )
+      .subscribe();
+
     // Escuta mudanças de sessão de autenticação do Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session && session.user) {
@@ -144,6 +160,8 @@ function App() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       subscription.unsubscribe();
+      supabase.removeChannel(realtimeChannel);
+      clearTimeout(syncTimeout);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshData]);

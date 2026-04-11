@@ -2,21 +2,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { HashRouter } from 'react-router-dom';
 import { Layout } from './components/Layout';
-import { Dashboard } from './components/Dashboard';
 import { Infographics } from './components/Infographics';
 import { Members } from './components/Members';
 import { Payments } from './components/Payments';
 import { Attendances } from './components/Attendances';
-import { CashFlow } from './components/CashFlow';
-import { Calculator } from './components/Calculator';
-import { Reports } from './components/Reports';
 import { Login } from './components/Login';
-import { Polls } from './components/Polls';
 import { SystemTools } from './components/SystemTools';
-import { Assets } from './components/Assets';
-import { Ombudsman } from './components/Ombudsman';
 import { Negotiations } from './components/Negotiations';
-import { Reservations } from './components/Reservations';
 import { Budgeting } from './components/Budgeting';
 import { MemberPortal } from './components/MemberPortal';
 import { StorageService } from './services/storageService';
@@ -29,7 +21,7 @@ function App() {
   const [currentMember, setCurrentMember] = useState<Member | null>(null);
   const [currentAdmin, setCurrentAdmin] = useState<User | null>(null);
 
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('infographics');
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving'>('saved');
   const [isLoading, setIsLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -278,22 +270,14 @@ function App() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'dashboard': return <Dashboard members={members} payments={payments} transactions={transactions} negotiations={negotiations} />;
       case 'attendance': return <Attendances members={members} attendances={attendances} user={currentAdmin} onToggleAttendance={handleAttendanceToggle} onRemoveAttendance={handleAttendanceRemove} />;
       case 'infographics': return <Infographics members={members} payments={payments} transactions={transactions} />;
       case 'members': return <Members members={members} onSave={handleMemberSave} onImport={handleMemberImport} onDelete={handleMemberDelete} onBulkDelete={handleMemberBulkDelete} />;
       case 'payments': return <Payments members={members} payments={payments} user={currentAdmin} onTogglePayment={handlePaymentToggle} onRemovePayment={handlePaymentRemove} />;
       case 'negotiations': return <Negotiations negotiations={negotiations} members={members} onSave={handleNegotiationSave} onDelete={handleNegotiationDelete} user={currentAdmin} />;
-      case 'reservations': return <Reservations reservations={reservations} members={members} onSave={handleReservationSave} onDelete={handleReservationDelete} />;
-      case 'cashflow': return <CashFlow transactions={transactions} onSave={handleTransactionSave} onDelete={handleTransactionDelete} user={currentAdmin} />;
-      case 'assets': return <Assets assets={assets} onSave={handleAssetSave} onDelete={handleAssetDelete} user={currentAdmin} />;
       case 'budgets': return <Budgeting budgets={budgets} transactions={transactions} onSave={handleBudgetSave} />;
-      case 'polls': return <Polls polls={polls} onSave={handlePollSave} />;
-      case 'reports': return <Reports members={members} payments={payments} transactions={transactions} />;
-      case 'ombudsman': return <Ombudsman messages={messages} onResolve={handleMessageResolve} />;
-      case 'calculator': return <Calculator />;
       case 'system': return <SystemTools onRestore={refreshData} user={currentAdmin} />;
-      default: return <Dashboard members={members} payments={payments} transactions={transactions} negotiations={negotiations} />;
+      default: return <Infographics members={members} payments={payments} transactions={transactions} />;
     }
   };
 

@@ -117,8 +117,15 @@ export const StorageService = {
   },
   savePayment: async (payment: Payment) => {
     const local = getLocal<Payment>(STORAGE_KEYS.payments);
-    saveLocal(STORAGE_KEYS.payments, [...local, payment]);
-    try { await supabase.from('payments').insert(payment); } catch (e) {}
+    // Deduplica por memberId+month+year antes de salvar — evita duplicatas no cache local
+    const deduped = local.filter(p => !(p.memberId === payment.memberId && p.month === payment.month && p.year === payment.year));
+    saveLocal(STORAGE_KEYS.payments, [...deduped, payment]);
+    try { 
+      // Usar upsert ao invés de insert garante que re-cliques não geram erro de chave duplicada
+      await supabase.from('payments').upsert(payment, { onConflict: 'id' }); 
+    } catch (e) { 
+      console.warn('Erro ao salvar pagamento no Supabase:', e);
+    }
   },
   removePayment: async (memberId: string, month: number, year: number) => {
     const local = getLocal<Payment>(STORAGE_KEYS.payments);
